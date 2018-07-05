@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Configuration后面的status，这个用于设置log4j2自身内部的信息输出，可以不设置，
+当设置成trace时，你会看到log4j2内部各种详细输出。可以设置成OFF(关闭) 或 Error(只输出错误信息)。
+-->
+<configuration status="trace" strict="true" name="LogConfig">
+
+    <!-- 日志文件目录、压缩文件目录、日志格式配置 -->
+    <properties>
+        <Property name="fileName">/var/yihuibao/batch</Property>
+        <Property name="fileGz">/var/yihuibao/batch/gz</Property>
+        <Property name="LOG_PATTERN">%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+    </properties>
+
+    <Appenders>
+        <!-- 输出控制台日志的配置 -->
+        <Console name="console" target="SYSTEM_OUT">
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            <!-- 输出日志的格式 -->
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- 打印出所有的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档 -->
+        <RollingFile  name="infoFile" fileName="${fileName}/info.log" filePattern="${fileGz}/$${date:yyyy-MM}/%d{yyyy-MM-dd}-%i.info.gz" >
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20 MB"/>
+                <CronTriggeringPolicy schedule="1 * * * * ?" evaluateOnStartup="true"/>
+            </Policies>
+            <Filters>
+                <!-- 只记录info和warn级别信息 -->
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <!-- 指定每天的最大压缩包个数，默认7个，超过了会覆盖之前的 -->
+            <DefaultRolloverStrategy max="50"/>
+        </RollingFile >
+
+        <!-- 存储所有error信息 -->
+        <RollingFile name="errorFile" fileName="${fileName}/error.log" filePattern="${fileGz}/$${date:yyyy-MM}/%d{yyyy-MM-dd}-%i.error.gz" >
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="50 MB"/>
+                <CronTriggeringPolicy schedule="1 * * * * ?" evaluateOnStartup="true"/>
+            </Policies>
+            <Filters>
+                <!-- 只记录error级别信息 -->
+                <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <!-- 指定每天的最大压缩包个数，默认7个，超过了会覆盖之前的 -->
+            <DefaultRolloverStrategy max="50"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info" includeLocation="true">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="infoFile"/>
+            <AppenderRef ref="errorFile"/>
+        </Root>
+
+        <logger name="org.springframework" level="info"></logger>
+        <logger name="org.mybatis" level="info"></logger>
+    </Loggers>
+
+</configuration>

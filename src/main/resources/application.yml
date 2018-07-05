@@ -1,0 +1,48 @@
+
+spring:
+  application:
+    name: batch
+
+  # 数据库连接配置
+  datasource:
+    url: jdbc:mysql://106.14.0.72:3306/healife
+    username: HealifeTestDB
+    password: testDB_3721
+    driverClassName: com.mysql.jdbc.Driver
+    # 连接池配置
+    type: com.alibaba.druid.pool.DruidDataSource
+    maxActive: 20
+    initialSize: 5
+    minIdle: 5
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    filters: stat,wall,log4j
+
+  batch:
+    job:
+      enabled: false # 关闭 batch 自动执行
+    table-prefix: z_
+
+# mybatis 配置
+mybatis:
+  type-aliases-package: com.batch.entities.*
+  mapper-locations: classpath:mapper/*.xml
+
+# mapper 配置
+mapper:
+  mappers: com.batch.framework.myBatis.CommonMapper
+  not-empty: false
+  identity: MYSQL
+
+# 分页插件
+pagehelper:
+  helper-dialect: mysql
+  reasonable: false # 页码合理化 关闭
+  support-methods-arguments: true # 是否从mapper接口参数处获取分页参数 开启
+  params: count=countSql
+
+logging:
+  config: classpath:log4j2.xml # log4j2 配置
+
+
